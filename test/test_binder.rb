@@ -14,7 +14,7 @@ class TestBinder < Minitest::Test
 
     @binder.parse(["tcp://localhost:10001"], @events)
 
-    assert_equal [], @binder.listeners
+    assert_equal "tcp://localhost:10001", @binder.listeners.first.first
   end
 
   def test_localhost_addresses_dont_alter_listeners_for_ssl_addresses
@@ -25,7 +25,8 @@ class TestBinder < Minitest::Test
 
     @binder.parse(["ssl://localhost:10002?key=#{key}&cert=#{cert}"], @events)
 
-    assert_equal [], @binder.listeners
+    assert_equal "ssl://localhost:10002?key=#{key}&cert=#{cert}",
+      @binder.listeners.first.first
   end
 
   def test_binder_parses_ssl_cipher_filter
@@ -92,5 +93,17 @@ class TestBinder < Minitest::Test
     ssl = @binder.instance_variable_get(:@ios).first
     ctx = ssl.instance_variable_get(:@ctx)
     refute(ctx.no_tlsv1)
+  end
+
+  def test_correct_zero_port
+    @events = Puma::Events.strings
+    @binder = Puma::Binder.new(@events)
+    @binder.parse(["tcp://localhost:0"], @events)
+
+    m = %r!tcp://localhost:(\d+)!.match(@events.stdout.string)
+
+    port = m[1].to_i
+
+    refute_equal 0, port
   end
 end
