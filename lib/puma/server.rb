@@ -23,7 +23,7 @@ module Puma
   #
   # This class is used by the `Puma::Single` and `Puma::Cluster` classes
   # to generate one or more `Puma::Server` instances capable of handling requests.
-  # Each Puma process will contain one `Puma::Server` instacne.
+  # Each Puma process will contain one `Puma::Server` instance.
   #
   # The `Puma::Server` instance pulls requests from the socket, adds them to a
   # `Puma::Reactor` where they get eventually passed to a `Puma::ThreadPool`.
@@ -588,19 +588,26 @@ module Puma
     end
 
     def default_server_port(env)
-      return PORT_443 if env[HTTPS_KEY] == 'on' || env[HTTPS_KEY] == 'https'
-      env['HTTP_X_FORWARDED_PROTO'] == 'https' ? PORT_443 : PORT_80
+      if ['on', HTTPS].include?(env[HTTPS_KEY]) || env[HTTP_X_FORWARDED_PROTO].to_s[0...5] == HTTPS || env[HTTP_X_FORWARDED_SCHEME] == HTTPS || env[HTTP_X_FORWARDED_SSL] == "on"
+        PORT_443
+      else
+        PORT_80
+      end
     end
 
-    # Given the request +env+ from +client+ and a partial request body
-    # in +body+, finish reading the body if there is one and invoke
-    # the rack app. Then construct the response and write it back to
-    # +client+
+    # Takes the request +req+, invokes the Rack application to construct
+    # the response and writes it back to +req.io+.
     #
-    # +cl+ is the previously fetched Content-Length header if there
-    # was one. This is an optimization to keep from having to look
-    # it up again.
+    # The second parameter +lines+ is a IO-like object unique to this thread.
+    # This is normally an instance of Puma::IOBuffer.
     #
+    # It'll return +false+ when the connection is closed, this doesn't mean
+    # that the response wasn't successful.
+    #
+    # It'll return +:async+ if the connection remains open but will be handled
+    # elsewhere, i.e. the connection has been hijacked by the Rack application.
+    #
+    # Finally, it'll return +true+ on keep-alive connections.
     def handle_request(req, lines)
       env = req.env
       client = req.io
@@ -623,7 +630,7 @@ module Puma
       head = env[REQUEST_METHOD] == HEAD
 
       env[RACK_INPUT] = body
-      env[RACK_URL_SCHEME] =  env[HTTPS_KEY] ? HTTPS : HTTP
+      env[RACK_URL_SCHEME] = default_server_port(env) == PORT_443 ? HTTPS : HTTP
 
       if @early_hints
         env[EARLY_HINTS] = lambda { |headers|

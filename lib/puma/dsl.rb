@@ -105,7 +105,12 @@ module Puma
       end
 
       if opts[:no_token]
-        auth_token = :none
+        # We need to use 'none' rather than :none because this value will be
+        # passed on to an instance of OptionParser, which doesn't support
+        # symbols as option values.
+        #
+        # See: https://github.com/puma/puma/issues/1193#issuecomment-305995488
+        auth_token = 'none'
       else
         auth_token = opts[:auth_token]
         auth_token ||= Configuration.random_token
@@ -471,7 +476,7 @@ module Puma
         raise "The minimum worker_timeout must be greater than the worker reporting interval (#{min})"
       end
 
-      @options[:worker_timeout] = Integer(timeout)
+      @options[:worker_timeout] = timeout
     end
 
     # *Cluster mode only* Set the timeout for workers to boot

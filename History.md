@@ -1,6 +1,22 @@
 ## Master
 
-* x features
+* Features
+  * Your feature goes here (#Github Number)
+
+* Bugfixes
+  * Your bugfix goes here (#Github Number)
+
+## 4.0.1 / 2019-07-11
+
+* 2 bugfixes
+  * Fix socket removed after reload - should fix problems with systemd socket activation. (#1829)
+  * Add extconf tests for DTLS_method & TLS_server_method, use in minissl.rb. Should fix "undefined symbol: DTLS_method" when compiling against old OpenSSL versions. (#1832)
+* 1 other
+  * Removed unnecessary RUBY_VERSION checks. (#1827)
+
+## 4.0.0 / 2019-06-25
+
+* 9 features
   * Add support for disabling TLSv1.0 (#1562)
   * Request body read time metric (#1569)
   * Add out_of_band hook (#1648)
@@ -8,14 +24,19 @@
   * Min worker timeout (#1716)
   * Add option to suppress SignalException on SIGTERM (#1690)
   * Allow mutual TLS CA to be set using `ssl_bind` DSL (#1689)
-* x bugfixes
-  * Do not accept new requests on shutdown (#1685)
+  * Reactor now uses nio4r instead of `select` (#1728)
+  * Add status to pumactl with pidfile (#1824)
+
+* 9 bugfixes
+  * Do not accept new requests on shutdown (#1685, #1808)
   * Fix 3 corner cases when request body is chunked (#1508)
   * Change pid existence check's condition branches (#1650)
   * Don't call .stop on a server that doesn't exist (#1655)
   * Implemented NID_X9_62_prime256v1 (P-256) curve over P-521 (#1671)
   * Fix @notify.close can't modify frozen IOError (RuntimeError) (#1583)
-
+  * Fix Java 8 support (#1773)
+  * Fix error `uninitialized constant Puma::Cluster` (#1731)
+  * Fix `not_token` being able to be set to true (#1803)
 
 ## 3.12.1 / 2019-03-19
 
@@ -1423,3 +1444,12 @@ be added back in a future date when a java Puma::MiniSSL is added.
 ## 1.0.0 / 2012-03-29
 
 * Released!
+
+## Ignore - this is for maintainers to copy-paste during release
+## Master
+
+* Features
+  * Your feature goes here (#Github Number)
+
+* Bugfixes
+  * Your bugfix goes here (#Github Number)

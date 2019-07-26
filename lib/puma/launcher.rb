@@ -214,6 +214,15 @@ module Puma
       end
     end
 
+    def close_binder_listeners
+      @binder.listeners.each do |l, io|
+        io.close
+        uri = URI.parse(l)
+        next unless uri.scheme == 'unix'
+        File.unlink("#{uri.host}#{uri.path}")
+      end
+    end
+
     private
 
     def reload_worker_directory
@@ -243,7 +252,7 @@ module Puma
 
         argv = restart_args
         Dir.chdir(@restart_dir)
-        argv += [redirects] if RUBY_VERSION >= '1.9'
+        argv += [redirects]
         Kernel.exec(*argv)
       end
     end
@@ -272,7 +281,7 @@ module Puma
         wild = File.expand_path(File.join(puma_lib_dir, "../bin/puma-wild"))
         args = [Gem.ruby, wild, '-I', dirs.join(':'), deps.join(',')] + @original_argv
         # Ruby 2.0+ defaults to true which breaks socket activation
-        args += [{:close_others => false}] if RUBY_VERSION >= '2.0'
+        args += [{:close_others => false}]
         Kernel.exec(*args)
       end
     end
@@ -318,16 +327,6 @@ module Puma
     def prune_bundler?
       @options[:prune_bundler] && clustered? && !@options[:preload_app]
     end
-
-    def close_binder_listeners
-      @binder.listeners.each do |l, io|
-        io.close
-        uri = URI.parse(l)
-        next unless uri.scheme == 'unix'
-        File.unlink("#{uri.host}#{uri.path}")
-      end
-    end
-
 
     def generate_restart_data
       if dir = @options[:directory]
